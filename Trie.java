@@ -80,7 +80,7 @@ public class Trie {
 		trie.add("bullshit");
 		trie.add("Africa");
 		trie.add("Asia");
-		trie.add("SonOfOsiris");
+		trie.add("Osiris");
 		trie.add("Heman");
 		trie.add("OhMyGod");
 
