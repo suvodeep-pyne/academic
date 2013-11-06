@@ -17,7 +17,7 @@ public class LinkedLists {
 		}
 	}
 
-	final boolean isRandom = true;
+	final boolean isRandom = false;
 
 	Node createLL(int[] A) {
 		if (A.length == 0) return null;
@@ -57,8 +57,48 @@ public class LinkedLists {
 	}
 
 	public void run() {
-		problem5a();
-		problem5b();
+		problem6();
+	}
+
+	void problem6() {
+		final Node head = createLL(80);
+		
+		int k = 32;
+		Node kNode = null, end = head;
+		while (end.next != null) {
+			if(k-- == 0) kNode = end;
+			end = end.next;
+		}
+
+		// Create a loop from end to kth node
+		end.next = kNode;
+
+		Node loopStart = detectLoop(head);
+		System.out.println("K-Node: " + kNode.val + " loopStart: " + loopStart.val);
+		
+	}
+
+	Node detectLoop(final Node head) {
+		if (head == null) return null;
+
+		Node slow = head, fast = head;
+
+		while (fast != null && fast.next != null) {
+			slow = slow.next;
+			fast = fast.next != null? fast.next.next : null;
+			if (slow == fast) break;
+		}
+		if (slow != fast) return null;
+
+		/* Loop exists. Now find where */
+		System.out.println("Cycle Exists!");
+		slow = head;
+		while (slow != fast) {
+			slow = slow.next;
+			fast = fast.next;
+		}
+
+		return slow;
 	}
 
 	void problem5b() {
