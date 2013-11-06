@@ -57,7 +57,48 @@ public class LinkedLists {
 	}
 
 	public void run() {
-		problem6();
+		problem7();
+	}
+
+	void problem7() {
+		int[] A = {1,2,2};
+		final Node head = createLL(A);
+		printLL(head);
+		
+		System.out.println("Palindrome: " + checkPalindrome(head));
+	}
+
+	boolean checkPalindrome(Node head) {
+		if (head == null) return false;
+		Node n = head;
+		int length = 0;
+		while (n != null) {
+			++length; n = n.next;
+		}
+		if (length == 1) return true;
+
+		int k = length / 2;
+		Node left, right;
+		n = head;
+		Node prev = null, next = null;
+		for (int i = 1; i <= k; i++) {
+			next = n.next;
+			n.next = prev;
+			prev = n;
+			n = next;
+		}
+		left = prev;
+		right = next;
+		if (length % 2 != 0) right = right.next;
+
+		assert (lengthLL(right) == lengthLL(left));
+		while(right != null) {
+			if (right.val != left.val) return false;
+			right = right.next;
+			left = left.next;
+		}
+		return true;
+
 	}
 
 	void problem6() {
