@@ -5,6 +5,7 @@
 
 import random
 import operator
+import copy
 import pprint as pp
 
 # Create an inverse graph mapping from child to parents
@@ -22,22 +23,28 @@ def find_factors(dag):
 	factors = []
 	for rv in range(N):
 		factor = set([p for p in range(N) if inv_dag[rv][p] == 1])
-		if len(factor) > 0: factors.append(factor)
+		if len(factor) > 0:
+			factor.add(rv)
+			factors.append(factor)
 	return factors
 
+# Update edges of the graph based on a factor
+def update_edges_factor(uag, factor):
+	for f1 in factor:
+		for f2 in factor:
+			if f1 != f2:
+				uag[f1][f2] = 1
+	
 # Fill all the edges present in the factors
 def fill_edges(factors):
 	N = len(dag)
-	udag =  [[0 for x in range(N)] for y in range(N)]
+	uag =  [[0 for x in range(N)] for y in range(N)]
 
 	# Connect all random variables belonging to the same factor
 	for factor in factors:
-		for f1 in factor:
-			for f2 in factor:
-				if f1 != f2:
-					udag[f1][f2] = 1
+		update_edges_factor(uag, factor)
+	return uag
 
-	return udag
 
 # Heuristic: Minimum degree of nodes
 def ordering(udag):
@@ -51,12 +58,9 @@ def ordering(udag):
 # Retrieve all rv's which share factors with rv
 def dependents(rv, factors):
 	dep = set()
-	for v, parents in factors.iteritems():
-		if v == rv:
-			dep.update(factors[rv])
-		elif rv in parents:
-			dep.update(parents)
-			dep.add(v)
+	for factor in factors:
+		if rv in factor:
+			dep.update(factor)
 	
 	# Return dependents excluding the input variable rv
 	dep.discard(rv)
@@ -68,8 +72,34 @@ def var_elim(dag, var):
 	udag = fill_edges(factors)
 	order = ordering(udag)
 
+	# Starting induced Graph creation from base graph
+	inducedGraph = udag
+
+	maxcliquesize = 1
+	for f in factors:
+		maxcliquesize = max(maxcliquesize, len(f))
+	
+	oldfactors = copy.deepcopy(factors)
+	newfactors = []
+	# print oldfactors
 	for velim in order:
-		pass		
+		newfactor = set()
+		for factor in oldfactors:
+			if velim in factor:
+				newfactor.update(factor)
+			else:
+				newfactors.append(factor)
+		newfactor.discard(velim)
+		if len(newfactor) > 1:
+			newfactors.append(newfactor)
+			update_edges_factor(inducedGraph, newfactor)
+			maxcliquesize = max(maxcliquesize, len(newfactor))
+		oldfactors = newfactors
+		newfactors = []
+		# print oldfactors
+	
+	inducedWidth = maxcliquesize - 1
+	return inducedGraph, inducedWidth
 
 def graph1():
 	dag = [[0 for x in range(12)] for y in range(12)]
@@ -106,10 +136,16 @@ def example_graph():
 	return dag
 
 if __name__ == "__main__":
-	dag = example_graph()
+	dag = graph1()
 	print 'Input Bayesian Network as Adj Matrix:'
 	pp.pprint(dag)
-	pp.pprint(find_factors(dag))
-	pp.pprint(fill_edges(find_factors(dag)))
-	pp.pprint(ordering(fill_edges(find_factors(dag))))
+	print 'Factors:', find_factors(dag)
+	print 'Ordering:', ordering(fill_edges(find_factors(dag)))
+
+	print 'Variable Elimination'
+	inducedGraph, inducedWidth = var_elim(dag, 9)
+
+	print 'Induced Graph'
+	pp.pprint(inducedGraph)
+	print 'Induced Width :', inducedWidth
 	
