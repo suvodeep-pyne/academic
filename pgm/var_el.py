@@ -120,6 +120,21 @@ def graph1():
 
 	return dag
 
+def graph2():
+	dag2 = [[0 for x in range(10)] for y in range(10)]                          
+	dag2[1][3] = 1
+	dag2[3][0] = 1
+	dag2[3][4] = 1
+	dag2[3][6] = 1
+	dag2[4][5] = 1
+	dag2[4][2] = 1
+	dag2[5][7] = 1
+	dag2[6][8] = 1
+	dag2[7][8] = 1
+	dag2[8][9] = 1
+
+	return dag2
+
 def example_graph():
 	N = 8
 	dag = [[0 for x in range(N)] for y in range(N)]
@@ -136,7 +151,7 @@ def example_graph():
 	return dag
 
 if __name__ == "__main__":
-	dag = graph1()
+	dag = graph2()
 	print 'Input Bayesian Network as Adj Matrix:'
 	pp.pprint(dag)
 	print 'Factors:', find_factors(dag)
