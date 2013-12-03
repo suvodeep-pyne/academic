@@ -10,10 +10,9 @@ E = set()
 e = set()
 lambdaX = {}
 lambdaYX = {}
+piX = {}
 pi = {}
 inv_dag = {}
-originalDAG = {}
-piX = {}
 prob_evid = {}
 prob = {}
 
@@ -43,7 +42,7 @@ def find_roots(dag):
 
 def initialize_network(dag):
     #values is a dictionary of variables and the list of values the variable can take
-    global E, e, lambdaX, lambdaYX, pi, inv_dag, originalDAG, piX, prob_evid, prob
+    global E, e, lambdaX, lambdaYX, pi, inv_dag, piX, prob_evid, prob
     E = set()
     e = set()
     lambdaX = {}
@@ -53,7 +52,6 @@ def initialize_network(dag):
     prob_evid = {}
 
     inv_dag = inverse_graph(dag)
-    originalDAG = dag
     for node in dag.keys():
         lambdaX[node] = {}
         for value in values(node):
@@ -82,11 +80,11 @@ def initialize_network(dag):
            prob_evid[root][value] = prob[str(root) + str(value)] 
 
         for child in dag[root]:
-            send_pi_msg(root, child);
+            send_pi_msg(dag, root, child);
 
 #Update function to update the network with evidence variables
-def update_network(variable, value):
-    global E, e, lambdaX, lambdaYX, pi, inv_dag, originalDAG, piX, prob_evid
+def update_network(dag, variable, value):
+    global E, e, lambdaX, lambdaYX, pi, inv_dag, piX, prob_evid
     E = E.union(set([variable]))
     e = e.union(set([value]))
 
@@ -100,42 +98,34 @@ def update_network(variable, value):
             piX[variable][v] = 0.0
             prob_evid[variable][v] = 0.0
 
-
     for parent in inv_dag[variable]:
-        if parent in E: 
-            continue
+        if parent not in E: 
+			send_lambda_msg(dag, variable, parent)
 
-        send_lambda_msg(variable, parent)
+    for child in dag[variable]:
+        send_pi_msg(dag, variable, child)
 
-    for child in originalDAG[variable]:
-        send_pi_msg(variable, child)
-
-def find_all_combs(assign, parents, index, Y, y):
+def all_combinations_lambda(assign, parents, pos, Y, y):
     global prob
-    if index == len(parents):
-        assign_sort = sorted(assign)
-        result = ''.join(assign_sort)
-        prob_r = prob[str(Y) + str(y)][result] 
+    if pos == len(parents):
+        prob_r = prob[str(Y) + str(y)][''.join(sorted(assign))] 
         for parent in assign[1:]:
-            #print "Value of pi is:", pi
-            #print parent[0], Y, parent[1]
             prob_r = prob_r * pi[Y][parent[0]][int(parent[1])]
         return prob_r
    
     prob_r = 0
-    possibleAssign = str(parents[index]) + str(0)
+    possibleAssign = str(parents[pos]) + str(0)
     assign1 = copy.deepcopy(assign)
     assign2 = copy.deepcopy(assign)
     assign1.append(possibleAssign)
-    prob_r += find_all_combs(assign1, parents, index+1, Y, y)
-    possibleAssign = str(parents[index]) + str(1)
+    prob_r += all_combinations_lambda(assign1, parents, pos + 1, Y, y)
+    possibleAssign = str(parents[pos]) + str(1)
     assign2.append(possibleAssign)
-    prob_r += find_all_combs(assign2, parents, index+1, Y, y)
+    prob_r += all_combinations_lambda(assign2, parents, pos + 1, Y, y)
     return prob_r
-    
 
 def marginalize(Y, y, X, x):
-    global E, e, lambdaX, lambdaYX, pi, inv_dag, originalDAG, piX, prob_evid
+    global E, e, lambdaX, lambdaYX, pi, inv_dag, piX, prob_evid
 
     parents = []
     for parent in inv_dag[Y]:
@@ -145,11 +135,11 @@ def marginalize(Y, y, X, x):
 
     assign = [str(X) + str(x)]
     marginalized_prob = 0
-    marginalized_prob = find_all_combs(assign, parents, 0, Y, y)
+    marginalized_prob = all_combinations_lambda(assign, parents, 0, Y, y)
     return marginalized_prob 
 
-def send_lambda_msg(Y, X):
-    global E, e, lambdaX, lambdaYX, pi, inv_dag, originalDAG, piX, prob_evid
+def send_lambda_msg(dag, Y, X):
+    global E, e, lambdaX, lambdaYX, pi, inv_dag, piX, prob_evid
 
     pTilde = {}
     for value in values(X):
@@ -158,7 +148,7 @@ def send_lambda_msg(Y, X):
             lambdaYX[Y][X][value] += marginalize(Y, valuep, X, value) * lambdaX[Y][valuep]
 
         lambdaX[X][value] = 1    
-        for child in originalDAG[X]:
+        for child in dag[X]:
             lambdaX[X][value] = lambdaX[X][value] * lambdaYX[child][X][value]
 
         #print "Lambda node is:", lambdaX[X][value]
@@ -178,40 +168,37 @@ def send_lambda_msg(Y, X):
         if parent in E:
             continue
 
-        send_lambda_msg(X, parent)
+        send_lambda_msg(dag, X, parent)
 
-    for child in (set(originalDAG[X]) - set([Y])):
-        send_pi_msg(X, child)
+    for child in (set(dag[X]) - set([Y])):
+        send_pi_msg(dag, X, child)
 
-def find_all_combs_pi(assign, parents, index, Y, y):
-    if index == len(parents):
-        assign_sort = sorted(assign)
-        result = ''.join(assign_sort)
-        prob_r = prob[str(Y) + str(y)][result]
+def find_all_combs_pi(assign, parents, pos, Y, y):
+    if pos == len(parents):
+        prob_r = prob[str(Y) + str(y)][''.join(sorted(assign))]
         for parent in assign:
             prob_r = prob_r * pi[Y][parent[0]][int(parent[1])]
         return prob_r 
     
     prob_r = 0
-    possibleAssign = str(parents[index]) + str(0)
+    possibleAssign = str(parents[pos]) + str(0)
     assign1 = copy.deepcopy(assign)
     assign2 = copy.deepcopy(assign)
     assign1.append(possibleAssign)
-    prob_r += find_all_combs_pi(assign1, parents, index+1, Y, y)
-    possibleAssign = str(parents[index]) + str(1)
+    prob_r += find_all_combs_pi(assign1, parents, pos + 1, Y, y)
+    possibleAssign = str(parents[pos]) + str(1)
     assign2.append(possibleAssign)
-    prob_r += find_all_combs_pi(assign2, parents, index+1, Y, y)
+    prob_r += find_all_combs_pi(assign2, parents, pos + 1, Y, y)
     return prob_r
     
 def marginalize_pi(X, x):
     assign = []
     return_value = 0
     return_value = find_all_combs_pi(assign, inv_dag[X], 0, X, x)
-    #print "return value is", return_value
     return return_value
 
 def check_lambda(X):
-    global E, e, lambdaX, lambdaYX, pi, inv_dag, originalDAG, piX, prob_evid
+    global E, e, lambdaX, lambdaYX, pi, inv_dag, piX, prob_evid
 
     for value in lambdaX[X]:
 		if lambdaX[X][value] != 1.0: 
@@ -219,14 +206,12 @@ def check_lambda(X):
     
     return False
 
-def send_pi_msg(Z, X):
-    #print "Sending pi message from ", Z, "to", X
-    global E, e, lambdaX, lambdaYX, pi, inv_dag, originalDAG, piX, prob_evid
+def send_pi_msg(dag, Z, X):
+    global E, e, lambdaX, lambdaYX, pi, inv_dag, piX, prob_evid
 
     for z in values(Z):
-        #print "Value of pi is:", pi[X], X, Z
         pi[X][Z][z] = piX[Z][z]
-        for child in originalDAG[Z]:
+        for child in dag[Z]:
             if child == X:
                 continue
             pi[X][Z][z] = pi[X][Z][z] * lambdaYX[child][Z][z]
@@ -235,7 +220,6 @@ def send_pi_msg(Z, X):
     if X not in piX:
         piX[X] = {}
     if X not in E:
-        #check this
         for x in values(X):
             piX[X][x] = marginalize_pi(X, x)
             pTilde[x] = piX[X][x] * lambdaX[X][x]
@@ -248,8 +232,8 @@ def send_pi_msg(Z, X):
         for x in values(X):
             prob_evid[X][x] = (float)(pTilde[x]) / alpha
 
-        for child in originalDAG[X]:
-            send_pi_msg(X, child)
+        for child in dag[X]:
+            send_pi_msg(dag, X, child)
 
     if check_lambda(X):
         for parent in inv_dag[X]:
@@ -257,7 +241,7 @@ def send_pi_msg(Z, X):
                 continue
             if parent in E:
                 continue
-            send_lambda_msg(X, parent)
+            send_lambda_msg(dag, X, parent)
 
 def get_prob():
     global prob
@@ -306,15 +290,17 @@ def get_prob():
     return prob
 
 
+def get_final_probs(dag, Z, Q):    
+	initialize_network(dag)
+	for variable, value in Z.iteritems():
+		update_network(dag, variable, value)
 
-def get_final_probs(dag, nodes, evidence, observe):    
-    initialize_network(nodes, dag)
-    for variable, value in evidence.iteritems():
-        update_network(variable, value)
+	prob = 1.0
+	for variable, value in Q.iteritems():
+		prob = prob * prob_evid[variable][value]
+		update_network(dag, variable, value)
 
-
-    for variable, value in observe.iteritems():
-        print prob_evid[variable][value]
+	print "P(", Q, "|", Z, ") =", prob
 
 if __name__ == '__main__':
     dag = {}
@@ -330,35 +316,35 @@ if __name__ == '__main__':
     prob = get_prob()
 
     #Find the prob of A=1, given evidence
-    evidence = {'B':0}
-    observe = {'A':1}
-    get_final_probs(dag, nodes, evidence, observe)
-    evidence = {'D':0}
-    get_final_probs(dag, nodes, evidence, observe)
-    evidence = {'D':0, 'B':0}
-    get_final_probs(dag, nodes, evidence, observe)
-    evidence = {'D':0, 'G':1}
+    Z = {'B':0}
+    Q = {'A':1}
+    get_final_probs(dag, Z, Q)
+    Z = {'D':0}
+    get_final_probs(dag, Z, Q)
+    Z = {'D':0, 'B':0}
+    get_final_probs(dag, Z, Q)
+    Z = {'D':0, 'G':1}
     
     #Find the prob for B=1, given evidence
-    observe = {'B':1}
-    evidence = {'A':1}
-    get_final_probs(dag, nodes, evidence, observe)
-    evidence = {'C':1}
-    get_final_probs(dag, nodes, evidence, observe)
-    evidence = {'A':1, 'C':1}
-    get_final_probs(dag, nodes, evidence, observe)
+    Q = {'B':1}
+    Z = {'A':1}
+    get_final_probs(dag, Z, Q)
+    Z = {'C':1}
+    get_final_probs(dag, Z, Q)
+    Z = {'A':1, 'C':1}
+    get_final_probs(dag, Z, Q)
     
     #Find the prob of C=1, given evidence
-    observe = {'C':1}
-    evidence = {}
-    get_final_probs(dag, nodes, evidence, observe)
-    evidence = {'A':1}
-    get_final_probs(dag, nodes, evidence, observe)
-    evidence = {'A':1, 'B':0}
-    get_final_probs(dag, nodes, evidence, observe)
-    evidence = {'D':0}
-    get_final_probs(dag, nodes, evidence, observe)
-    evidence = {'D':0, 'F':0}
-    get_final_probs(dag, nodes, evidence, observe)
+    Q = {'C':1}
+    Z = {}
+    get_final_probs(dag, Z, Q)
+    Z = {'A':1}
+    get_final_probs(dag, Z, Q)
+    Z = {'A':1, 'B':0}
+    get_final_probs(dag, Z, Q)
+    Z = {'D':0}
+    get_final_probs(dag, Z, Q)
+    Z = {'D':0, 'F':0}
+    get_final_probs(dag, Z, Q)
      
 
