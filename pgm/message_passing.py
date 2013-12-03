@@ -103,6 +103,5 @@ def example_input():
 	G['G'] = set()
 	return G
 
-
 if __name__ == "__main__":
 	pass
