@@ -144,8 +144,26 @@ class StructureLearner:
 				for subset in self.subsets_by_size(n1, n2, subsetsize):
 					minfo = self.mutual_info(n1, n2, subset)
 					if minfo < EPSILON:
+						self.independencies[(n1, n2)] = set(subset)
 						self.graph[n1][n2] = 0
 						self.graph[n2][n1] = 0
+
+	def find_v_structures(self):
+		count = 0
+		for n1 in range(0, self.ndim - 2):
+			for n2 in range(n1 + 1, self.ndim - 1):
+				if self.graph[n1][n2] == 0: continue
+				for n3 in range(0, self.ndim):
+					if n1 == n3 or n2 == n3 or self.graph[n2][n3] == 0: continue
+					pair = (n1, n3)
+					if pair not in self.independencies or len(self.independencies[pair]) != 0:
+						continue
+					# V structure case
+					count += 1
+					self.graph[n2][n1] = 0
+					self.graph[n2][n3] = 0
+		return count
+	
 
 	def print_graph(self):
 		print 'Graph:'
@@ -170,5 +188,8 @@ if __name__ == '__main__':
 	# print 'Mutual Info', sl.mutual_info(0, 1, [])
 	
 	sl.learn_skeleton()
+	n_vstructs = sl.find_v_structures()
 	print 'Number of Edges:', sl.count_edges()
+	print 'Number of V Structures', n_vstructs
+	pp.pprint(sl.independencies)
 	sl.print_graph()
