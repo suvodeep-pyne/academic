@@ -8,7 +8,7 @@ import itertools
 import pprint as pp
 
 MAX_SUBSET_SIZE = 4
-EPSILON = 0.01
+EPSILON = 0.001
 
 class FileHandler:
 	def __init__(self):
@@ -51,6 +51,10 @@ class StructureLearner:
 		candidates.discard(n2)
 		return candidates
 
+	def subsets_by_size(self, n1, n2, subsetsize):
+		nodes = self.subset_candidates(n1, n2)
+		return itertools.combinations(nodes, subsetsize)
+	
 	def all_subsets(self, n1, n2):
 		nodes = self.subset_candidates(n1, n2)
 		subsets = []
@@ -111,14 +115,28 @@ class StructureLearner:
 					cond_prob = self.cond_prob(Q, z)
 					if cond_prob == 0: continue
 					log_exp = cond_prob / (self.cond_prob({X:x}, z) * self.cond_prob({Y:y}, z))
-					sumxy += cond_prob * math.log(log_exp, 2) 
+					sumxy += cond_prob * math.log(log_exp, 2)
 			mi += prob_evid * sumxy
 		return mi
 
+	def count_edges(self):
+		count = 0
+		for n1 in range(0, self.ndim):
+			for n2 in range(0, self.ndim):
+				if self.graph[n1][n2]:
+					count += 1
+		return count
+	
 	def learn_skeleton(self):
+		self.remove_edges(0)
+		self.remove_edges(1)
+		self.remove_edges(2)
+		
+	def remove_edges(self, subsetsize):
 		for n1 in range(0, self.ndim - 1):
 			for n2 in range(n1 + 1, self.ndim):
-				for subset in self.all_subsets(n1, n2):
+				if self.graph[n1][n2] == 0: continue
+				for subset in self.subsets_by_size(n1, n2, subsetsize):
 					minfo = self.mutual_info(n1, n2, subset)
 					if minfo < EPSILON:
 						self.graph[n1][n2] = 0
@@ -139,5 +157,6 @@ if __name__ == '__main__':
 	print 'cond_prob:', sl.cond_prob({0:1, 1:0},{})
 	print 'Mutual Info', sl.mutual_info(0, 1, [])
 	
-# 	sl.learn_skeleton()
-# 	pp.pprint(sl.graph)
+	sl.learn_skeleton()
+	print 'Number of Edges:', sl.count_edges()
+	pp.pprint(sl.graph)
