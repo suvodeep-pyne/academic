@@ -1,0 +1,15 @@
+After round 1
+All     : [Zihing 100 208(1,1), Weitao 79 193(3,1), Anh 74 234(5,1), Nima 67 102(7,1), Roman 61 197(9,0), Andrei 46 176(11,0), Andras 44 220(13,0), Meihong 39 181(15,0), Xiao 34 111(17,0), Zejia 10 217(19,0)]
+Playing : [Anh 74 234(5,1), Zihing 100 208(1,1), Weitao 79 193(3,1), Roman 61 197(9,0)]
+Bench   : [Andrei 46 176(11,0), Meihong 39 181(15,0), Andras 44 220(13,0), Zejia 10 217(19,0), Xiao 34 111(17,0), Nima 67 102(7,1)]
+All     : [Ranjeeth 96 194(2,1), Weitao 79 148(4,1), Steaphan 68 120(6,1), Weitao 65 214(8,1), Luiz 46 224(10,0), Anil 46 113(12,0), Fabien 41 125(14,0), Philip 36 113(16,0), Keegan 22 185(18,0)]
+Playing : [Steaphan 68 120(6,1), Ranjeeth 96 194(2,1), Weitao 79 148(4,1), Luiz 46 224(10,0)]
+Bench   : [Anil 46 113(12,0), Philip 36 113(16,0), Fabien 41 125(14,0), Keegan 22 185(18,0), Weitao 65 214(8,1)]
+After round 2
+All     : [Zihing 100 208(1,2), Weitao 79 193(3,2), Anh 74 234(5,2), Nima 67 102(7,1), Roman 61 197(9,1), Andrei 46 176(11,0), Andras 44 220(13,0), Meihong 39 181(15,0), Xiao 34 111(17,0), Zejia 10 217(19,0)]
+Playing : [Weitao 79 193(3,2), Zihing 100 208(1,2), Roman 61 197(9,1), Andrei 46 176(11,0)]
+Bench   : [Andras 44 220(13,0), Meihong 39 181(15,0), Nima 67 102(7,1), Zejia 10 217(19,0), Xiao 34 111(17,0), Anh 74 234(5,2)]
+All     : [Ranjeeth 96 194(2,2), Weitao 79 148(4,2), Steaphan 68 120(6,2), Weitao 65 214(8,1), Luiz 46 224(10,1), Anil 46 113(12,0), Fabien 41 125(14,0), Philip 36 113(16,0), Keegan 22 185(18,0)]
+Playing : [Weitao 79 148(4,2), Ranjeeth 96 194(2,2), Luiz 46 224(10,1), Anil 46 113(12,0)]
+Bench   : [Fabien 41 125(14,0), Philip 36 113(16,0), Weitao 65 214(8,1), Keegan 22 185(18,0), Steaphan 68 120(6,2)]
+Case #1: Andrei Anil Luiz Ranjeeth Roman Weitao Weitao Zihing

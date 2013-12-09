@@ -13,8 +13,6 @@ lambdaYX = {}
 piX = {}
 pi = {}
 inv_dag = {}
-prob_evid = {}
-prob = {}
 
 # Returns values of a variable X
 # In the example graph, all variables are binary
@@ -40,6 +38,8 @@ def find_roots(dag):
 		roots.difference_update(children)
 	return roots
 
+prob_evid = {}
+prob = {}
 def initialize_network(dag):
 	#values is a dictionary of variables and the list of values the variable can take
 	global E, e, lambdaX, lambdaYX, pi, inv_dag, piX, prob_evid, prob
@@ -105,26 +105,13 @@ def update_network(dag, variable, value):
 	for child in dag[variable]:
 		send_pi_msg(dag, variable, child)
 
-def all_combinations_lambda(assign, parents, pos, Y, y):
-	global prob
-	if pos == len(parents):
-		prob_r = prob[str(Y) + str(y)][''.join(sorted(assign))] 
-		for parent in assign[1:]:
-			prob_r = prob_r * pi[Y][parent[0]][int(parent[1])]
-		return prob_r
-   
-	prob_r = 0
-	possibleAssign = str(parents[pos]) + str(0)
-	assign1 = copy.deepcopy(assign)
-	assign2 = copy.deepcopy(assign)
-	assign1.append(possibleAssign)
-	prob_r += all_combinations_lambda(assign1, parents, pos + 1, Y, y)
-	possibleAssign = str(parents[pos]) + str(1)
-	assign2.append(possibleAssign)
-	prob_r += all_combinations_lambda(assign2, parents, pos + 1, Y, y)
-	return prob_r
+def marginalize_pi(X, x):
+	assign = []
+	return_value = 0
+	return_value = all_combinations_pi(assign, inv_dag[X], 0, X, x)
+	return return_value
 
-def marginalize(Y, y, X, x):
+def marginalize_lambda(Y, y, X, x):
 	global E, e, lambdaX, lambdaYX, pi, inv_dag, piX, prob_evid
 
 	parents = []
@@ -143,7 +130,7 @@ def send_lambda_msg(dag, Y, X):
 	for value in values(X):
 		lambdaYX[Y][X][value] = 0
 		for valuep in values(Y):
-			lambdaYX[Y][X][value] += marginalize(Y, valuep, X, value) * lambdaX[Y][valuep]
+			lambdaYX[Y][X][value] += marginalize_lambda(Y, valuep, X, value) * lambdaX[Y][valuep]
 
 		lambdaX[X][value] = 1	
 		for child in dag[X]:
@@ -166,6 +153,26 @@ def send_lambda_msg(dag, Y, X):
 	for child in (set(dag[X]) - set([Y])):
 		send_pi_msg(dag, X, child)
 
+def all_combinations_lambda(assign, parents, pos, Y, y):
+	global prob
+	if pos == len(parents):
+		prob_r = prob[str(Y) + str(y)][''.join(sorted(assign))] 
+		for parent in assign[1:]:
+			prob_r = prob_r * pi[Y][parent[0]][int(parent[1])]
+		return prob_r
+   
+	prob_r = 0
+	possibleAssign = str(parents[pos]) + str(0)
+	assign1 = copy.deepcopy(assign)
+	assign2 = copy.deepcopy(assign)
+	assign1.append(possibleAssign)
+	prob_r += all_combinations_lambda(assign1, parents, pos + 1, Y, y)
+	possibleAssign = str(parents[pos]) + str(1)
+	assign2.append(possibleAssign)
+	prob_r += all_combinations_lambda(assign2, parents, pos + 1, Y, y)
+	return prob_r
+
+
 def all_combinations_pi(assign, parents, pos, Y, y):
 	if pos == len(parents):
 		prob_r = prob[str(Y) + str(y)][''.join(sorted(assign))]
@@ -184,14 +191,8 @@ def all_combinations_pi(assign, parents, pos, Y, y):
 	prob_r += all_combinations_pi(assign2, parents, pos + 1, Y, y)
 	return prob_r
 	
-def marginalize_pi(X, x):
-	assign = []
-	return_value = 0
-	return_value = all_combinations_pi(assign, inv_dag[X], 0, X, x)
-	return return_value
-
-def check_lambda(X):
-	global E, e, lambdaX, lambdaYX, pi, inv_dag, piX, prob_evid
+def should_send_lambda_msg(X):
+	global lambdaX
 
 	for value in lambdaX[X]:
 		if lambdaX[X][value] != 1.0: 
@@ -226,7 +227,7 @@ def send_pi_msg(dag, Z, X):
 		for child in dag[X]:
 			send_pi_msg(dag, X, child)
 
-	if check_lambda(X):
+	if should_send_lambda_msg(X):
 		for parent in inv_dag[X]:
 			if parent != Z and parent not in E:
 				send_lambda_msg(dag, X, parent)

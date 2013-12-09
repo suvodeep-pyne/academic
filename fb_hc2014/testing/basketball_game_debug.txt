@@ -1,0 +1,22 @@
+1
+19 2 4
+Xiao 34 111
+Ranjeeth 96 194
+Luiz 46 224
+Meihong 39 181
+Andrei 46 176
+Anil 46 113
+Roman 61 197
+Weitao 79 148
+Andras 44 220
+Nima 67 102
+Weitao 79 193
+Anh 74 234
+Fabien 41 125
+Weitao 65 214
+Keegan 22 185
+Zejia 10 217
+Zihing 100 208
+Philip 36 113
+Steaphan 68 120
+

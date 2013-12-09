@@ -8,6 +8,7 @@ import itertools
 import pprint as pp
 
 MAX_SUBSET_SIZE = 4
+EPSILON = 0.01
 
 class FileHandler:
 	def __init__(self):
@@ -32,31 +33,34 @@ class StructureLearner:
 		if self.nsamples > 0:
 			self.ndim = len(train_data[0])
 			self.calcProb()
+			self.graph = [[1 if i != j else 0 for i in range(self.ndim)] for j in range(self.ndim)]
 	
 	def calcProb(self):
 		for X in xrange(0, self.ndim):
-			sum = 0.0
+			counts = 0.0
 			for entry in range(0, self.nsamples):
-				sum += self.train_data[entry][X]
-			prob = sum / self.nsamples
+				counts += self.train_data[entry][X]
+			prob = counts / self.nsamples
 			self.probX.append([1 - prob, prob])
 		
-	def subset_candidates(self, excl):
-		candidates = set(range(0, self.ndim))
-		candidates.difference_update(excl)
+	def subset_candidates(self, n1, n2):
+		candidates = set()
+		for adj in range(0, self.ndim):
+			if self.graph[n1][adj] == 1:
+				candidates.add(adj)
+		candidates.discard(n2)
 		return candidates
 
 	def all_subsets(self, n1, n2):
-		MAX = 4
-
-		# append empty subset
-		nodes = self.subset_candidates([n1, n2])
+		nodes = self.subset_candidates(n1, n2)
 		subsets = []
 		subsets.append(())
 		for subsetsize in range(1, MAX_SUBSET_SIZE + 1):
 			subsets.extend(itertools.combinations(nodes, subsetsize))
 		return subsets
 
+	# Input:
+	# 		Z: is a list
 	def assign(self, Z, assignment):
 		z = {}
 		for i in range(0, len(Z)):
@@ -69,11 +73,12 @@ class StructureLearner:
 	# Return P(X1, ... ,Xk)
 	def intersect_prob(self, Q):
 		# Empty Query is true for all cases when Evidence is true
-		return self.cond_prob({}, Q)
+		return self.cond_prob(Q, {})
 
 	# Return P(Q1, .. Qk | E1, ... , El)
 	def cond_prob(self, Q, E):
 		sum_cp = 0.0
+		total_cond_valid = 0.0
 		for entry in range(0, self.nsamples):
 			# Conditionally valid
 			cond_valid = True
@@ -82,6 +87,7 @@ class StructureLearner:
 					cond_valid = False
 					break
 			if cond_valid == True:
+				total_cond_valid += 1
 				query_valid = True
 				for V, v in Q.iteritems():
 					if self.train_data[entry][V] != v:
@@ -89,7 +95,7 @@ class StructureLearner:
 						break
 				if query_valid == True:
 					sum_cp += 1
-		prob = sum_cp / self.nsamples
+		prob = sum_cp / total_cond_valid
 		return prob
 
 	# Mutual Information 
@@ -103,6 +109,7 @@ class StructureLearner:
 				for y in range(0, 2):
 					Q = { X: x, Y: y }
 					cond_prob = self.cond_prob(Q, z)
+					if cond_prob == 0: continue
 					log_exp = cond_prob / (self.cond_prob({X:x}, z) * self.cond_prob({Y:y}, z))
 					sumxy += cond_prob * math.log(log_exp, 2) 
 			mi += prob_evid * sumxy
@@ -111,7 +118,12 @@ class StructureLearner:
 	def learn_skeleton(self):
 		for n1 in range(0, self.ndim - 1):
 			for n2 in range(n1 + 1, self.ndim):
-				subsets = self.all_subsets(n1, n2)
+				for subset in self.all_subsets(n1, n2):
+					minfo = self.mutual_info(n1, n2, subset)
+					if minfo < EPSILON:
+						self.graph[n1][n2] = 0
+						self.graph[n2][n1] = 0
+						
 				
 
 if __name__ == '__main__':
@@ -121,6 +133,11 @@ if __name__ == '__main__':
 	# pp.pprint(mat)
 	sl = StructureLearner(train_data)
 	# pp.pprint(sl.probX)
+	# pp.pprint(sl.all_subsets(0, 1))
 	print 'assignment:',sl.assign([3, 7, 8], 5)	
-	print 'cond_prob:', sl.cond_prob({2:1, 4:1},{0:1, 10:1})
-	print sl.graph
+	print 'intersect_prob:', sl.intersect_prob({2:1, 4:1})
+	print 'cond_prob:', sl.cond_prob({0:1, 1:0},{})
+	print 'Mutual Info', sl.mutual_info(0, 1, [])
+	
+# 	sl.learn_skeleton()
+# 	pp.pprint(sl.graph)
