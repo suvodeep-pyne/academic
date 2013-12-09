@@ -5,6 +5,7 @@
 
 import math
 import itertools
+import datetime
 import pprint as pp
 
 MAX_SUBSET_SIZE = 4
@@ -26,6 +27,7 @@ class FileHandler:
 class StructureLearner:
 	graph = []
 	probX = []
+	independencies = {}
 
 	def __init__(self, train_data):
 		self.train_data = train_data
@@ -110,11 +112,12 @@ class StructureLearner:
 			prob_evid = self.intersect_prob(z)
 			sumxy = 0.0
 			for x in range(0, 2):
+				prob_Xx = self.cond_prob({X:x}, z)
 				for y in range(0, 2):
 					Q = { X: x, Y: y }
 					cond_prob = self.cond_prob(Q, z)
 					if cond_prob == 0: continue
-					log_exp = cond_prob / (self.cond_prob({X:x}, z) * self.cond_prob({Y:y}, z))
+					log_exp = cond_prob / (prob_Xx * self.cond_prob({Y:y}, z))
 					sumxy += cond_prob * math.log(log_exp, 2)
 			mi += prob_evid * sumxy
 		return mi
@@ -128,9 +131,11 @@ class StructureLearner:
 		return count
 	
 	def learn_skeleton(self):
-		self.remove_edges(0)
-		self.remove_edges(1)
-		self.remove_edges(2)
+		start_time = datetime.datetime.now()
+		for subsetsize in range(0, 5):
+			self.remove_edges(subsetsize)
+		end_time = datetime.datetime.now()
+		print 'Time taken to learn skeleton:', (end_time - start_time).seconds, 'sec'
 		
 	def remove_edges(self, subsetsize):
 		for n1 in range(0, self.ndim - 1):
@@ -141,8 +146,15 @@ class StructureLearner:
 					if minfo < EPSILON:
 						self.graph[n1][n2] = 0
 						self.graph[n2][n1] = 0
-						
-				
+
+	def print_graph(self):
+		print 'Graph:'
+		for n1 in range(0, self.ndim):
+			line = ""
+			for n2 in range(0, self.ndim):
+				line += str(self.graph[n1][n2]) + " "
+			print line
+
 
 if __name__ == '__main__':
 	fh = FileHandler();
@@ -152,11 +164,11 @@ if __name__ == '__main__':
 	sl = StructureLearner(train_data)
 	# pp.pprint(sl.probX)
 	# pp.pprint(sl.all_subsets(0, 1))
-	print 'assignment:',sl.assign([3, 7, 8], 5)	
-	print 'intersect_prob:', sl.intersect_prob({2:1, 4:1})
-	print 'cond_prob:', sl.cond_prob({0:1, 1:0},{})
-	print 'Mutual Info', sl.mutual_info(0, 1, [])
+	# print 'assignment:',sl.assign([3, 7, 8], 5)	
+	# print 'intersect_prob:', sl.intersect_prob({2:1, 4:1})
+	# print 'cond_prob:', sl.cond_prob({0:1, 1:0},{})
+	# print 'Mutual Info', sl.mutual_info(0, 1, [])
 	
 	sl.learn_skeleton()
 	print 'Number of Edges:', sl.count_edges()
-	pp.pprint(sl.graph)
+	sl.print_graph()
