@@ -192,6 +192,7 @@ class StructureLearner:
 		while add_edges:
 			add_edges = False
 			add_edges = add_edges or self.process_case1()
+			add_edges = add_edges or self.process_case2()
 			add_edges = add_edges or self.process_case3()
 	
 	# For each uncoupled X -> Z - Y , orient Z -> Y
@@ -212,7 +213,36 @@ class StructureLearner:
 			self.graph[edge[0]][edge[1]] = 0
 			self.adjl[edge[0]].remove(edge[1])
 		return len(removed_edges) > 0
-			
+	
+	def process_case2(self):
+		removed_edges = set()
+		for X in range(0, self.ndim):
+			for Y in self.adjl[X]:
+				# Require a undirected edge
+				if not self.is_undir_edge(X, Y): continue
+				if self.dir_path_exists(X, Y): 
+					print (Y, X)
+					removed_edges.add((Y, X))
+		
+		for edge in removed_edges:
+			self.graph[edge[0]][edge[1]] = 0
+			self.adjl[edge[0]].remove(edge[1])
+		return len(removed_edges) > 0
+	
+	def dir_path_exists(self, X, Y):
+		stack = []
+		stack.append(X)
+		visited = set()
+		while len(stack) > 0:
+			n = stack.pop()
+			visited.add(n)
+			for adj in self.adjl[n]:
+				if self.is_dir_edge(n, adj):
+					if adj == Y: return True
+					if adj not in visited:
+						stack.append(adj)
+		return False
+	
 	# For each uncoupled X - Z - Y
 	# such that X -> W, Y -> W, Z - W
 	# orient Z -> W
