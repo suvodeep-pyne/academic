@@ -3,7 +3,7 @@
 # Author: Suvodeep Pyne
 #
 
-import os
+import math
 import itertools
 import pprint as pp
 
@@ -14,9 +14,9 @@ class FileHandler:
 		pass
 
 	def read_file(self, filename):
-		file = open(filename, 'r')
+		input_file = open(filename, 'r')
 		matrix = []
-		for line in file: 
+		for line in input_file: 
 			values = line.strip().split('\t')
 			row = [int(a) for a in values]
 			matrix.append(row)
@@ -42,9 +42,9 @@ class StructureLearner:
 			self.probX.append([1 - prob, prob])
 		
 	def subset_candidates(self, excl):
-		all = set(range(0, self.ndim))
-		all.difference_update(excl)
-		return all
+		candidates = set(range(0, self.ndim))
+		candidates.difference_update(excl)
+		return candidates
 
 	def all_subsets(self, n1, n2):
 		MAX = 4
@@ -73,7 +73,7 @@ class StructureLearner:
 
 	# Return P(Q1, .. Qk | E1, ... , El)
 	def cond_prob(self, Q, E):
-		sum = 0.0
+		sum_cp = 0.0
 		for entry in range(0, self.nsamples):
 			# Conditionally valid
 			cond_valid = True
@@ -88,20 +88,31 @@ class StructureLearner:
 						query_valid = False
 						break
 				if query_valid == True:
-					sum += 1
-		prob = sum / self.nsamples
+					sum_cp += 1
+		prob = sum_cp / self.nsamples
 		return prob
 
 	# Mutual Information 
 	def mutual_info(self, X, Y, Z):
+		mi = 0.0
 		for assignment in range(0, 2 ** len(Z)):
-			z = assign(Z, assignment) 
+			z = self.assign(Z, assignment)
+			prob_evid = self.intersect_prob(z)
+			sumxy = 0.0
+			for x in range(0, 2):
+				for y in range(0, 2):
+					Q = { X: x, Y: y }
+					cond_prob = self.cond_prob(Q, z)
+					log_exp = cond_prob / (self.cond_prob({X:x}, z) * self.cond_prob({Y:y}, z))
+					sumxy += cond_prob * math.log(log_exp, 2) 
+			mi += prob_evid * sumxy
+		return mi
 
 	def learn_skeleton(self):
 		for n1 in range(0, self.ndim - 1):
 			for n2 in range(n1 + 1, self.ndim):
-				subsets = all_subsets(n1, n2)
-								
+				subsets = self.all_subsets(n1, n2)
+				
 
 if __name__ == '__main__':
 	fh = FileHandler();
@@ -110,6 +121,6 @@ if __name__ == '__main__':
 	# pp.pprint(mat)
 	sl = StructureLearner(train_data)
 	# pp.pprint(sl.probX)
-	# print 'assignment:',sl.assign([3, 7, 8], 5)	
-	# print 'cond_prob:', sl.cond_prob({2:1, 4:1},{0:1, 10:1})
+	print 'assignment:',sl.assign([3, 7, 8], 5)	
+	print 'cond_prob:', sl.cond_prob({2:1, 4:1},{0:1, 10:1})
 	print sl.graph
