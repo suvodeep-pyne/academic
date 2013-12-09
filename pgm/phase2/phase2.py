@@ -155,15 +155,35 @@ class StructureLearner:
 				if self.graph[n1][n2] == 0: continue
 				for n3 in range(0, self.ndim):
 					if n1 == n3 or n2 == n3 or self.graph[n2][n3] == 0: continue
-					pair = (n1, n3)
+					pair = (n1, n3) if n1 <= n3 else (n3, n1)
 					if pair not in self.independencies or len(self.independencies[pair]) != 0:
 						continue
 					# V structure case
 					count += 1
-					self.graph[n2][n1] = 0
-					self.graph[n2][n3] = 0
+					self.process_v_structure(n1, n2, n3)
 		return count
-	
+
+	# n2 is the V node
+	def process_v_structure(self, n1, n2, n3):
+		self.graph[n2][n1] = 0
+		self.graph[n2][n3] = 0
+		
+		excl = set([n1, n2, n3])
+		#n2 is the V node
+		for n4 in range(0, self.ndim):
+			if n4 in excl: continue
+			# Consider nodes which are adj to V Node
+			if self.graph[n2][n4] != 0: continue
+			
+			# No covering edge
+			if self.graph[n1][n4] == 0 and self.graph[n4][n1] == 0:
+				self.graph[n4][n2] = 0
+			
+			# No covering edge
+			if self.graph[n3][n4] == 0 and self.graph[n4][n3] == 0:
+				self.graph[n4][n2] = 0
+						
+		
 
 	def print_graph(self):
 		print 'Graph:'
