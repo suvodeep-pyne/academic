@@ -167,24 +167,78 @@ class StructureLearner:
 	def process_v_structure(self, n1, n2, n3):
 		self.graph[n2][n1] = 0
 		self.graph[n2][n3] = 0
-		
-		excl = set([n1, n2, n3])
-		#n2 is the V node
-		for n4 in range(0, self.ndim):
-			if n4 in excl: continue
-			# Consider nodes which are adj to V Node
-			if self.graph[n2][n4] != 0: continue
-			
-			# No covering edge
-			if self.graph[n1][n4] == 0 and self.graph[n4][n1] == 0:
-				self.graph[n4][n2] = 0
-			
-			# No covering edge
-			if self.graph[n3][n4] == 0 and self.graph[n4][n3] == 0:
-				self.graph[n4][n2] = 0
-						
-		
 
+	def is_dir_edge(self, n1, n2):
+		return self.graph[n1][n2] != 0 and self.graph[n2][n1] == 0
+
+	def is_undir_edge(self, n1, n2):
+		return self.graph[n1][n2] != 0 and self.graph[n2][n1] != 0
+	
+	def is_conn(self, n1, n2):
+		return self.graph[n1][n2] != 0 or self.graph[n2][n1] != 0
+		
+	def create_adj_list(self):
+		adjl = []
+		for n1 in range(0, self.ndim):
+			adjl.append(set())
+			for n2 in range(0 , self.ndim):
+				if (self.graph[n1][n2] != 0):
+					adjl[n1].add(n2)
+		return adjl
+		
+	def orient_edges(self):
+		self.adjl = self.create_adj_list()
+		add_edges = True
+		while add_edges:
+			add_edges = False
+			add_edges = add_edges or self.process_case1()
+			add_edges = add_edges or self.process_case3()
+	
+	# For each uncoupled X -> Z - Y , orient Z -> Y
+	def process_case1(self):
+		removed_edges = set()
+		for X in range(0, self.ndim):
+			for Z in self.adjl[X]:
+				# Require a directed edge
+				if self.graph[Z][X] != 0: continue
+				for Y in self.adjl[Z]:
+					# Require an undirected edge
+					if not self.is_undir_edge(Z, Y): continue
+					# Require uncoupled nodes
+					if self.is_conn(X, Y): continue
+					removed_edges.add((Y, Z))
+		
+		for edge in removed_edges:
+			self.graph[edge[0]][edge[1]] = 0
+			self.adjl[edge[0]].remove(edge[1])
+		return len(removed_edges) > 0
+			
+	# For each uncoupled X - Z - Y
+	# such that X -> W, Y -> W, Z - W
+	# orient Z -> W
+	def process_case3(self):
+		removed_edges = set()
+		for X in range(0, self.ndim):
+			for Z in self.adjl[X]:
+				# Require an undirected edge
+				if not self.is_undir_edge(X, Z): continue
+				for Y in self.adjl[Z]:
+					# Require an undirected edge
+					if not self.is_undir_edge(Z, Y): continue
+					# Require uncoupled nodes
+					if self.is_conn(X, Y): continue
+					
+					candidates = self.adjl[X].intersection(self.adjl[Y])
+					candidates.intersection_update(self.adjl[Z])
+					for W in candidates:
+						if self.is_dir_edge(X, W) and self.is_dir_edge(Y, W) and self.is_undir_edge(Z, W):
+							removed_edges.add((Y, Z))
+		
+		for edge in removed_edges:
+			self.graph[edge[0]][edge[1]] = 0
+			self.adjl[edge[0]].remove(edge[1])
+		return len(removed_edges) > 0
+		
 	def print_graph(self):
 		print 'Graph:'
 		for n1 in range(0, self.ndim):
@@ -192,7 +246,14 @@ class StructureLearner:
 			for n2 in range(0, self.ndim):
 				line += str(self.graph[n1][n2]) + " "
 			print line
-
+	
+	def learn_structure(self):
+		self.learn_skeleton()
+		n_vstructs = self.find_v_structures()
+		self.orient_edges()
+		
+		print 'Number of Edges:', self.count_edges()
+		print 'Number of V Structures', n_vstructs
 
 if __name__ == '__main__':
 	fh = FileHandler();
@@ -207,9 +268,6 @@ if __name__ == '__main__':
 	# print 'cond_prob:', sl.cond_prob({0:1, 1:0},{})
 	# print 'Mutual Info', sl.mutual_info(0, 1, [])
 	
-	sl.learn_skeleton()
-	n_vstructs = sl.find_v_structures()
-	print 'Number of Edges:', sl.count_edges()
-	print 'Number of V Structures', n_vstructs
-	pp.pprint(sl.independencies)
+	sl.learn_structure()
+	pp.pprint(sl.adjl)
 	sl.print_graph()
