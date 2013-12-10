@@ -3,6 +3,7 @@
 # Author: Suvodeep Pyne
 #
 
+import re
 import math
 import itertools
 import datetime
@@ -19,7 +20,7 @@ class FileHandler:
 		input_file = open(filename, 'r')
 		matrix = []
 		for line in input_file: 
-			values = line.strip().split('\t')
+			values = re.compile('\s+').split(line.strip())
 			row = [int(a) for a in values]
 			matrix.append(row)
 		return matrix
@@ -177,17 +178,17 @@ class StructureLearner:
 	def is_conn(self, n1, n2):
 		return self.graph[n1][n2] != 0 or self.graph[n2][n1] != 0
 		
-	def create_adj_list(self):
+	def create_adj_list(self, adj_mat):
 		adjl = []
 		for n1 in range(0, self.ndim):
 			adjl.append(set())
 			for n2 in range(0 , self.ndim):
-				if (self.graph[n1][n2] != 0):
+				if (adj_mat[n1][n2] != 0):
 					adjl[n1].add(n2)
 		return adjl
 		
 	def orient_edges(self):
-		self.adjl = self.create_adj_list()
+		self.adjl = self.create_adj_list(self.graph)
 		add_edges = True
 		while add_edges:
 			add_edges = False
@@ -328,7 +329,9 @@ if __name__ == '__main__':
 	# print 'cond_prob:', sl.cond_prob({0:1, 1:0},{})
 	# print 'Mutual Info', sl.mutual_info(0, 1, [])
 	
-	sl.learn_structure()
-	pp.pprint(sl.adjl)
-	sl.print_graph()
-	# pp.pprint(sl.process_cpds(sl.adjl))
+	# sl.learn_structure()
+	# pp.pprint(sl.adjl)
+	# sl.print_graph()
+	
+	bn = fh.read_file('ref_graph.txt')
+	pp.pprint(sl.process_cpds(sl.create_adj_list(bn)))
