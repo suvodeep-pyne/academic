@@ -355,4 +355,26 @@ if __name__ == '__main__':
 	
 	Z = {1:0}
 	Q = {0:1}
-	pearl.calc_probability(pearl_adjl, Z, Q)
+	# pearl.calc_probability(pearl_adjl, Z, Q)
+	
+	test_data = { 
+				'test50a.txt' : 3, 
+				'test50b.txt' : 5, 
+				'test50c.txt' : 7,
+				'test50d.txt' : 9
+				}
+	for filename in test_data:
+		test_set = fh.read_file('training-test-data/' + filename)
+		n_evidences = test_data[filename]
+		print 'Results for', filename
+		
+		for entry in test_set:
+			E = {}
+			for n in range(0, n_evidences):
+				E[n] = entry[n]
+			for n in range(10, 20):
+				for v in 0, 1:
+					Q = { n : v }
+					
+					print 'P(', Q, '|', E, ') =', 0.005
+					
