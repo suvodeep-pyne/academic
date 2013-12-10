@@ -9,6 +9,8 @@ import itertools
 import datetime
 import pprint as pp
 
+import pearl_belief_prop as pearl
+
 MAX_SUBSET_SIZE = 4
 EPSILON = 0.001
 
@@ -300,7 +302,17 @@ class StructureLearner:
 	
 	def cpd_key(self, Q, E):
 		return (tuple(sorted(Q.items())), tuple(sorted(E.items())))
-	
+	"""
+		# Code for alphabetical keys for probabilities
+		key = ""
+		for k, v in Q.iteritems():
+			key += str(chr(65 + k)) + str(v)
+		key += '|'
+		for k, v in sorted(E.items()):
+			key += str(chr(65 + k)) + str(v)
+		return key
+	"""
+
 	def process_cpds(self, dag):
 		cpds = {}
 		inv_dag = self.inverse_graph(dag)
@@ -334,4 +346,13 @@ if __name__ == '__main__':
 	# sl.print_graph()
 	
 	bn = fh.read_file('ref_graph.txt')
-	pp.pprint(sl.process_cpds(sl.create_adj_list(bn)))
+	adjl = sl.create_adj_list(bn)
+	pp.pprint(sl.process_cpds(adjl))
+	
+	pearl_adjl = {}
+	for key in range(0, sl.ndim):
+		pearl_adjl[key] = list(adjl[key])
+	
+	Z = {1:0}
+	Q = {0:1}
+	pearl.calc_probability(pearl_adjl, Z, Q)
