@@ -5,6 +5,7 @@
 
 import re
 import math
+import random
 import itertools
 import datetime
 import pprint as pp
@@ -363,7 +364,7 @@ if __name__ == '__main__':
 	# pp.pprint(sl.adjl)
 	# sl.print_graph()
 	
-	bn = fh.read_file('manual_graph.txt')
+	bn = fh.read_file('graph/ref_graph.txt')
 	adjl = sl.create_adj_list(bn)
 	
 	cpd = sl.process_cpds(adjl)
@@ -423,5 +424,30 @@ if __name__ == '__main__':
 		print 'Overall Expected prediction accuracy:', (expected_sum / 500)
 		print 'Overall Actual   prediction accuracy:', (actual_sum / 500)
 		print
-					
-			
+				
+	challenge_file = 'training-test-data/challenge200.txt'
+	challenge_set = fh.read_file(challenge_file)
+	ghapla = 0
+	for entry in challenge_set:
+		E = {}
+		for n in range(0, len(entry)):
+			if entry[n] != -1:
+				E[chr(65 + n)] = entry[n]
+		
+		# printing prediction results
+		row = ''
+		
+		for n in range(0, len(entry)):
+			if chr(65 + n) in E:
+				row += str(E[chr(65 + n)]) + '\t'
+			else:
+				Q = {chr(65 + n) : 1}
+				try:
+					p = pearl.compute_probability(pearl_adjl, Q, E)
+				except:
+					ghapla += 1
+					p = random.random()
+				predicted = 1 if p >= 0.5 else 0
+				row += str(predicted) + '\t'
+		print row
+	print 'Ghapla:', ghapla
