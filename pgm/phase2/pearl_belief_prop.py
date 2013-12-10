@@ -19,9 +19,6 @@ inv_dag = {}
 def values(X):
 	return [0, 1]
 
-def cpd_key(self, Q, E):
-	return (tuple(sorted(Q.items())), tuple(sorted(E.items())))
-
 # Create an inverse graph mapping from child to parents
 def inverse_graph(dag):
 	inv_dag = {}
@@ -231,17 +228,64 @@ def send_pi_msg(dag, Z, X):
 			if parent != Z and parent not in E:
 				send_lambda_msg(dag, X, parent)
 
+def example_probMat():
+	global prob
+	prob['A1'] = 0.7
+	prob['A0'] = 0.3
+	prob['B1'] = 0.4
+	prob['B0'] = 0.6
+	prob['C1'] = {}
+	prob['C0'] = {}
+	prob['C1']['A0B0'] = 0.1
+	prob['C1']['A0B1'] = 0.5
+	prob['C1']['A1B0'] = 0.3
+	prob['C1']['A1B1'] = 0.9
+	prob['C0']['A0B0'] = 0.9
+	prob['C0']['A0B1'] = 0.5
+	prob['C0']['A1B0'] = 0.7
+	prob['C0']['A1B1'] = 0.1
+
+	prob['D1'] = {}
+	prob['D0'] = {}
+	prob['D1']['C0'] = 0.8
+	prob['D1']['C1'] = 0.3
+	prob['D0']['C0'] = 0.2
+	prob['D0']['C1'] = 0.7
+	
+	prob['E1'] = {}
+	prob['E0'] = {}
+	prob['E1']['C0'] = 0.2 
+	prob['E1']['C1'] = 0.6
+	prob['E0']['C0'] = 0.8
+	prob['E0']['C1'] = 0.4
+
+	prob['F1'] = {}
+	prob['F0'] = {}
+	prob['F1']['D0'] = 0.1
+	prob['F1']['D1'] = 0.7
+	prob['F0']['D0'] = 0.9
+	prob['F0']['D1'] = 0.3
+
+	prob['G1'] = {}
+	prob['G0'] = {}
+	prob['G1']['D0'] = 0.9
+	prob['G1']['D1'] = 0.4
+	prob['G0']['D0'] = 0.1
+	prob['G0']['D1'] = 0.6
+	return prob
+
+
 def calc_probability(dag, Z, Q):	
 	initialize_network(dag)
 	for variable, value in Z.iteritems():
 		update_network(dag, variable, value)
 
-	p = 1.0
+	prob = 1.0
 	for variable, value in Q.iteritems():
-		p *= prob_evid[variable][value]
+		prob = prob * prob_evid[variable][value]
 		update_network(dag, variable, value)
 
-	print "P(", Q, "|", Z, ") =", p
+	print "P(", Q, "|", Z, ") =", prob
 
 def example_dag():
 	dag = {}
@@ -256,6 +300,7 @@ def example_dag():
 
 if __name__ == '__main__':
 	dag = example_dag() 
+	prob = example_probMat()
 
 	#Find the prob of A=1, given evidence
 	Z = {'B':0}

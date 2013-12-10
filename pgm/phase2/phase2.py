@@ -312,21 +312,30 @@ class StructureLearner:
 			key += str(chr(65 + k)) + str(v)
 		return key
 	"""
-
+	def stringify(self, Q):
+		key = ""
+		for k, v in sorted(Q.items()):
+			key += str(chr(65 + k)) + str(v)
+		return key
+	
 	def process_cpds(self, dag):
-		cpds = {}
+		cpd = {}
 		inv_dag = self.inverse_graph(dag)
 		for X in range(0, self.ndim):
 			paX = inv_dag[X]
-			cpd = {}
 			for x in 0, 1:
 				Q = {X:x}
 				for assignment in range(0, 2 ** len(paX)):
 					# parents of X with assignments x
 					paXx = self.assign(paX, assignment)
-					cpd[self.cpd_key(Q, paXx)] = self.cond_prob(Q, paXx)
-			cpds[X] = cpd
-		return cpds
+					cond_prob = self.cond_prob(Q, paXx)
+					if len(paXx) > 0:
+						if self.stringify(Q) not in cpd:
+							cpd[self.stringify(Q)] = {}
+						cpd[self.stringify(Q)][self.stringify(paXx)] = cond_prob
+					else:
+						cpd[self.stringify(Q)] = cond_prob
+		return cpd
 
 if __name__ == '__main__':
 	fh = FileHandler();
@@ -347,21 +356,24 @@ if __name__ == '__main__':
 	
 	bn = fh.read_file('ref_graph.txt')
 	adjl = sl.create_adj_list(bn)
-	pp.pprint(sl.process_cpds(adjl))
+	
+	cpd = sl.process_cpds(adjl)
+	pp.pprint(cpd)
 	
 	pearl_adjl = {}
 	for key in range(0, sl.ndim):
-		pearl_adjl[key] = list(adjl[key])
+		pearl_adjl[chr(65 + key)] = [ chr(65 + n) for n in adjl[key] ]
 	
+	pearl.prob = cpd	
 	Z = {1:0}
 	Q = {0:1}
-	# pearl.calc_probability(pearl_adjl, Z, Q)
+	pearl.calc_probability(pearl_adjl, Z, Q)
 	
 	test_data = { 
-				'test50a.txt' : 3, 
-				'test50b.txt' : 5, 
-				'test50c.txt' : 7,
-				'test50d.txt' : 9
+# 				'test50a.txt' : 3, 
+# 				'test50b.txt' : 5, 
+# 				'test50c.txt' : 7,
+# 				'test50d.txt' : 9
 				}
 	for filename in test_data:
 		test_set = fh.read_file('training-test-data/' + filename)
