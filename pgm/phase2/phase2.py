@@ -23,6 +23,7 @@ class FileHandler:
 		matrix = []
 		for line in input_file: 
 			values = re.compile('\s+').split(line.strip())
+			if len(values) == 0: continue
 			row = [int(a) for a in values]
 			matrix.append(row)
 		return matrix
@@ -336,6 +337,14 @@ class StructureLearner:
 					else:
 						cpd[self.stringify(Q)] = cond_prob
 		return cpd
+	
+	def print_cpds(self, cpd):
+		for k, v in cpd.iteritems():
+			header = '%(key)s | ' % {"key": k[0]}
+			if isinstance(v, dict):
+				header = header.join([' ' + E[0] + ' ' for E in v])
+			print header
+			
 
 if __name__ == '__main__':
 	fh = FileHandler();
@@ -354,11 +363,11 @@ if __name__ == '__main__':
 	# pp.pprint(sl.adjl)
 	# sl.print_graph()
 	
-	bn = fh.read_file('ref_graph.txt')
+	bn = fh.read_file('manual_graph.txt')
 	adjl = sl.create_adj_list(bn)
 	
 	cpd = sl.process_cpds(adjl)
-	pp.pprint(cpd)
+# 	pp.pprint(cpd)
 	
 	pearl_adjl = {}
 	for key in range(0, sl.ndim):
@@ -368,15 +377,17 @@ if __name__ == '__main__':
 	
 	test_data = { 
 				'test50a.txt' : 3, 
-# 				'test50b.txt' : 5, 
-# 				'test50c.txt' : 7,
-# 				'test50d.txt' : 9
+				'test50b.txt' : 5, 
+				'test50c.txt' : 7,
+				'test50d.txt' : 9
 				}
-	for filename in test_data:
+	for filename in sorted(test_data):
 		test_set = fh.read_file('training-test-data/' + filename)
 		n_evidences = test_data[filename]
 		print 'Results for', filename
 		
+		expected = {}
+		actual = {}
 		expected_sum = 0.0
 		actual_sum = 0.0
 		for entry in test_set:
@@ -388,11 +399,28 @@ if __name__ == '__main__':
 				p = pearl.compute_probability(pearl_adjl, Q, E)
 				predicted = 1 if p >= 0.5 else 0
 				# Print the probability value
-				print 'P(', Q, '|', E, ') =', p
+				strE = "".join([k + str(v) for k, v in sorted(E.iteritems())])
+				print '%(query)s1|%(evid)s) = %(prob).3f Predicted: %(predicted)d Actual: %(actual)d' % \
+					{"query" : chr(65 + n), "evid": strE, "prob": p, \
+					"predicted": predicted, "actual": entry[n]}
 				
+				if n not in expected: expected[n] = 0.0
+				if n not in actual: actual[n] = 0.0
+				expected[n] += p
+				actual[n] += (predicted == entry[n])
 				expected_sum += p
 				actual_sum += (predicted == entry[n])
-		print 'Expected prediction accuracy:', (expected_sum / 500)
-		print 'Actual prediction accuracy:', (actual_sum / 500)
+		for n in expected.keys():
+			expected[n] /= len(test_set)
+			actual[n] /= len(test_set)
+			
+			print
+			print 'Expected prediction accuracy(%(var)s): %(val).3f' \
+			% {"var": chr(65 + n), "val": expected[n]}
+			print 'Actual prediction accuracy(%(var)s)  : %(val).3f' \
+			% {"var": chr(65 + n), "val": actual[n]}
+		print
+		print 'Overall Expected prediction accuracy:', (expected_sum / 500)
+		print 'Overall Actual prediction accuracy:', (actual_sum / 500)
 					
 			
