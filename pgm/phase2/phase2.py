@@ -368,6 +368,8 @@ if __name__ == '__main__':
 		n_evidences = test_data[filename]
 		print 'Results for', filename
 		
+		expected_sum = 0.0
+		actual_sum = 0.0
 		for entry in test_set:
 			E = {}
 			for n in range(0, n_evidences):
@@ -375,6 +377,14 @@ if __name__ == '__main__':
 			for n in range(10, 20):
 				for v in 0, 1:
 					Q = { n : v }
+					p = 0.005
+					predicted = 1
+					# Print the probability value
+					print 'P(', Q, '|', E, ') =', p
 					
-					print 'P(', Q, '|', E, ') =', 0.005
+					expected_sum += p
+					actual_sum += (predicted == entry[n])
+		print 'Expected prediction accuracy:', (expected_sum/500)
+		print 'Actual prediction accuracy:', (actual_sum/500)
 					
+			
