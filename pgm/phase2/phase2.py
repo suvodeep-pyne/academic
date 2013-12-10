@@ -288,21 +288,21 @@ class StructureLearner:
 	# Create an inverse graph mapping from child to parents
 	def inverse_graph(self, dag):
 		inv_dag = {}
-		for node in dag:
+		for node in range(0, self.ndim):
 			inv_dag[node] = []
 	
-		for p, children in dag.iteritems():
-			for c in children:
-				inv_dag[c].append(p)
+		for node in range(0, self.ndim):
+			for c in dag[node]:
+				inv_dag[c].append(node)
 		
 		return inv_dag
 	
-	def get_cpd_key(self, Q, E):
-		return tuple(sorted(tuple(sorted(Q.items())), tuple(sorted(E.items()))))
+	def cpd_key(self, Q, E):
+		return (tuple(sorted(Q.items())), tuple(sorted(E.items())))
 	
-	def process_cpds(self):
+	def process_cpds(self, dag):
 		cpds = {}
-		inv_dag = self.inverse_graph(self.adjl)
+		inv_dag = self.inverse_graph(dag)
 		for X in range(0, self.ndim):
 			paX = inv_dag[X]
 			cpd = {}
@@ -311,10 +311,9 @@ class StructureLearner:
 				for assignment in range(0, 2 ** len(paX)):
 					# parents of X with assignments x
 					paXx = self.assign(paX, assignment)
-					cpd[self.get_cpd_key(Q, paXx)] = self.cond_prob(Q, paXx)
+					cpd[self.cpd_key(Q, paXx)] = self.cond_prob(Q, paXx)
 			cpds[X] = cpd
 		return cpds
-			
 
 if __name__ == '__main__':
 	fh = FileHandler();
@@ -332,3 +331,4 @@ if __name__ == '__main__':
 	sl.learn_structure()
 	pp.pprint(sl.adjl)
 	sl.print_graph()
+	# pp.pprint(sl.process_cpds(sl.adjl))
