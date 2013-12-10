@@ -376,10 +376,10 @@ if __name__ == '__main__':
 	pearl.prob = cpd	
 	
 	test_data = { 
-				'test50a.txt' : 3, 
-				'test50b.txt' : 5, 
-				'test50c.txt' : 7,
-				'test50d.txt' : 9
+# 				'test50a.txt' : 3, 
+# 				'test50b.txt' : 5, 
+# 				'test50c.txt' : 7,
+# 				'test50d.txt' : 9
 				}
 	for filename in sorted(test_data):
 		test_set = fh.read_file('training-test-data/' + filename)
@@ -400,7 +400,7 @@ if __name__ == '__main__':
 				predicted = 1 if p >= 0.5 else 0
 				# Print the probability value
 				strE = "".join([k + str(v) for k, v in sorted(E.iteritems())])
-				print '%(query)s1|%(evid)s) = %(prob).3f Predicted: %(predicted)d Actual: %(actual)d' % \
+				print 'P(%(query)s1|%(evid)s) = %(prob).3f Predicted: %(predicted)d Actual: %(actual)d' % \
 					{"query" : chr(65 + n), "evid": strE, "prob": p, \
 					"predicted": predicted, "actual": entry[n]}
 				
@@ -417,10 +417,11 @@ if __name__ == '__main__':
 			print
 			print 'Expected prediction accuracy(%(var)s): %(val).3f' \
 			% {"var": chr(65 + n), "val": expected[n]}
-			print 'Actual prediction accuracy(%(var)s)  : %(val).3f' \
+			print 'Actual   prediction accuracy(%(var)s): %(val).3f' \
 			% {"var": chr(65 + n), "val": actual[n]}
 		print
 		print 'Overall Expected prediction accuracy:', (expected_sum / 500)
-		print 'Overall Actual prediction accuracy:', (actual_sum / 500)
+		print 'Overall Actual   prediction accuracy:', (actual_sum / 500)
+		print
 					
 			
