@@ -284,6 +284,37 @@ class StructureLearner:
 		
 		print 'Number of Edges:', self.count_edges()
 		print 'Number of V Structures', n_vstructs
+	
+	# Create an inverse graph mapping from child to parents
+	def inverse_graph(self, dag):
+		inv_dag = {}
+		for node in dag:
+			inv_dag[node] = []
+	
+		for p, children in dag.iteritems():
+			for c in children:
+				inv_dag[c].append(p)
+		
+		return inv_dag
+	
+	def get_cpd_key(self, Q, E):
+		return tuple(sorted(tuple(sorted(Q.items())), tuple(sorted(E.items()))))
+	
+	def process_cpds(self):
+		cpds = {}
+		inv_dag = self.inverse_graph(self.adjl)
+		for X in range(0, self.ndim):
+			paX = inv_dag[X]
+			cpd = {}
+			for x in 0, 1:
+				Q = {X:x}
+				for assignment in range(0, 2 ** len(paX)):
+					# parents of X with assignments x
+					paXx = self.assign(paX, assignment)
+					cpd[self.get_cpd_key(Q, paXx)] = self.cond_prob(Q, paXx)
+			cpds[X] = cpd
+		return cpds
+			
 
 if __name__ == '__main__':
 	fh = FileHandler();
