@@ -5,7 +5,6 @@
 
 import re
 import math
-import random
 import itertools
 import datetime
 import pprint as pp
@@ -427,7 +426,6 @@ if __name__ == '__main__':
 				
 	challenge_file = 'training-test-data/challenge200.txt'
 	challenge_set = fh.read_file(challenge_file)
-	ghapla = 0
 	for entry in challenge_set:
 		E = {}
 		for n in range(0, len(entry)):
@@ -442,12 +440,7 @@ if __name__ == '__main__':
 				row += str(E[chr(65 + n)]) + '\t'
 			else:
 				Q = {chr(65 + n) : 1}
-				try:
-					p = pearl.compute_probability(pearl_adjl, Q, E)
-				except:
-					ghapla += 1
-					p = random.random()
+				p = pearl.compute_probability(pearl_adjl, Q, E)
 				predicted = 1 if p >= 0.5 else 0
 				row += str(predicted) + '\t'
 		print row
-	print 'Ghapla:', ghapla
