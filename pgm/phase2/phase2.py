@@ -365,12 +365,9 @@ if __name__ == '__main__':
 		pearl_adjl[chr(65 + key)] = [ chr(65 + n) for n in adjl[key] ]
 	
 	pearl.prob = cpd	
-	Z = {1:0}
-	Q = {0:1}
-	pearl.calc_probability(pearl_adjl, Z, Q)
 	
 	test_data = { 
-# 				'test50a.txt' : 3, 
+				'test50a.txt' : 3, 
 # 				'test50b.txt' : 5, 
 # 				'test50c.txt' : 7,
 # 				'test50d.txt' : 9
@@ -385,18 +382,17 @@ if __name__ == '__main__':
 		for entry in test_set:
 			E = {}
 			for n in range(0, n_evidences):
-				E[n] = entry[n]
+				E[chr(65 + n)] = entry[n]
 			for n in range(10, 20):
-				for v in 0, 1:
-					Q = { n : v }
-					p = 0.005
-					predicted = 1
-					# Print the probability value
-					print 'P(', Q, '|', E, ') =', p
-					
-					expected_sum += p
-					actual_sum += (predicted == entry[n])
-		print 'Expected prediction accuracy:', (expected_sum/500)
-		print 'Actual prediction accuracy:', (actual_sum/500)
+				Q = { chr(65 + n) : 1 }
+				p = pearl.compute_probability(pearl_adjl, Q, E)
+				predicted = 1 if p >= 0.5 else 0
+				# Print the probability value
+				print 'P(', Q, '|', E, ') =', p
+				
+				expected_sum += p
+				actual_sum += (predicted == entry[n])
+		print 'Expected prediction accuracy:', (expected_sum / 500)
+		print 'Actual prediction accuracy:', (actual_sum / 500)
 					
 			

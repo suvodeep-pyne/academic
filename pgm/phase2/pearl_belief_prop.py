@@ -274,18 +274,19 @@ def example_probMat():
 	prob['G0']['D1'] = 0.6
 	return prob
 
-
-def calc_probability(dag, Z, Q):	
+def compute_probability(dag, Q, Z):
 	initialize_network(dag)
 	for variable, value in Z.iteritems():
 		update_network(dag, variable, value)
 
-	prob = 1.0
+	p = 1.0
 	for variable, value in Q.iteritems():
-		prob = prob * prob_evid[variable][value]
+		p *= prob_evid[variable][value]
 		update_network(dag, variable, value)
+	return p
 
-	print "P(", Q, "|", Z, ") =", prob
+def calc_probability(dag, Z, Q):	
+	print "P(", Q, "|", Z, ") =", compute_probability(dag, Q, Z)
 
 def example_dag():
 	dag = {}
