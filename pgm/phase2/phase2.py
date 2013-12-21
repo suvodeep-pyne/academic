@@ -363,7 +363,7 @@ if __name__ == '__main__':
 	# pp.pprint(sl.adjl)
 	# sl.print_graph()
 	
-	bn = fh.read_file('graph/ref_graph.txt')
+	bn = fh.read_file('graph/manual_graph.txt')
 	adjl = sl.create_adj_list(bn)
 	
 	cpd = sl.process_cpds(adjl)
@@ -376,7 +376,7 @@ if __name__ == '__main__':
 	pearl.prob = cpd	
 	
 	test_data = { 
-# 				'test50a.txt' : 3, 
+				'test50a.txt' : 3, 
 # 				'test50b.txt' : 5, 
 # 				'test50c.txt' : 7,
 # 				'test50d.txt' : 9
@@ -423,24 +423,25 @@ if __name__ == '__main__':
 		print 'Overall Expected prediction accuracy:', (expected_sum / 500)
 		print 'Overall Actual   prediction accuracy:', (actual_sum / 500)
 		print
-				
-	challenge_file = 'training-test-data/challenge200.txt'
-	challenge_set = fh.read_file(challenge_file)
-	for entry in challenge_set:
-		E = {}
-		for n in range(0, len(entry)):
-			if entry[n] != -1:
-				E[chr(65 + n)] = entry[n]
-		
-		# printing prediction results
-		row = ''
-		
-		for n in range(0, len(entry)):
-			if chr(65 + n) in E:
-				row += str(E[chr(65 + n)]) + '\t'
-			else:
-				Q = {chr(65 + n) : 1}
-				p = pearl.compute_probability(pearl_adjl, Q, E)
-				predicted = 1 if p >= 0.5 else 0
-				row += str(predicted) + '\t'
-		print row
+	
+	if False:
+		challenge_file = 'training-test-data/challenge200.txt'
+		challenge_set = fh.read_file(challenge_file)
+		for entry in challenge_set:
+			E = {}
+			for n in range(0, len(entry)):
+				if entry[n] != -1:
+					E[chr(65 + n)] = entry[n]
+			
+			# printing prediction results
+			row = ''
+			
+			for n in range(0, len(entry)):
+				if chr(65 + n) in E:
+					row += str(E[chr(65 + n)]) + '\t'
+				else:
+					Q = {chr(65 + n) : 1}
+					p = pearl.compute_probability(pearl_adjl, Q, E)
+					predicted = 1 if p >= 0.5 else 0
+					row += str(predicted) + '\t'
+			print row
