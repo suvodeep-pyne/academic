@@ -72,6 +72,29 @@ void reduce(int start)
 	}
 }
 
+void printPoss()
+{
+	for (int i = 0; i < 81; i++)
+	{
+		printf("%3x ", poss[i]);
+		if ((i + 1) % 9 == 0) cout << endl;
+	}
+	cout << endl;
+}
+
+void print()
+{
+	for (int i = 0; i < 81; i++)
+	{
+		if (is_fixed(poss[i]))
+			printf("%d", 1 + set_bit(poss[i]));
+		else
+			printf(".");
+		if ((i + 1) % 9 == 0) cout << endl;
+	}
+	cout << endl;
+}
+
 void solve()
 {
 	char prob[MAX];
@@ -87,13 +110,9 @@ void solve()
 			poss[i] = 0;
 	}
 
+	print();
 	// reduce();
-	// cout << endl << endl;
-	for (int i = 0; i < MAX; i++)
-	{
-		printf("%5d ", poss[i]);
-		if ((i + 1) % 9 == 0) cout << endl;
-	}
+	printPoss();
 }
 
 int main() 
@@ -104,6 +123,7 @@ int main()
 	for (int i = 1; i <= nTestCases; i++)
 	{
 		solve();
+		break;
 	}
 	return 0;
 }
