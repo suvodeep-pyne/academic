@@ -6,3 +6,23 @@
 
 *.pyc
 *.*~
+
+.idea
+.gradle
+
+# build directories
+target
+build
+out
+
+# thrift generated directories
+daptor-server/src/gen/thrift/java/gen-javabean
+
+# Intellij files
+*.iml
+*.ipr
+*.iws
+
+# Temporary files
+tmp
+
