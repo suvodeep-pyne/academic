@@ -1,0 +1,12 @@
+apply plugin: 'java'
+apply plugin: 'idea'
+
+dependencies {
+}
+
+idea.module {
+  downloadJavadoc = true
+  downloadSources = true
+
+  excludeDirs += file('target')
+}
