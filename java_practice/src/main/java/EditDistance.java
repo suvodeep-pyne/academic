@@ -11,15 +11,6 @@ public class EditDistance {
     testcase("abcd", "abcde");
   }
 
-  private static void print2D(int mat[][]) {
-    for (int[] row : mat) {
-      for (int x : row) {
-        System.out.print(x + " ");
-      }
-      System.out.println();
-    }
-  }
-
   private static void testcase(final String s, final String s1) {
     System.out.println(s + " > " + s1 + " : " + new EditDistance().minDistance(s, s1));
   }
