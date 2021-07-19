@@ -1,4 +1,1 @@
-SPOJ
-====
-
-Solutions to SPOJ problems
+My attempts at academic problems
